@@ -6,13 +6,27 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 
 import { Login } from "@/pages/Login";
+import { Onboarding } from "@/pages/Onboarding";
+import { Home } from "@/pages/Home";
+import { TodayWorkout } from "@/pages/TodayWorkout";
+import { TrainingPlan } from "@/pages/TrainingPlan";
+import { DayWorkout } from "@/pages/DayWorkout";
+import { Evolution } from "@/pages/Evolution";
+import { AICoach } from "@/pages/AICoach";
+import { Profile } from "@/pages/Profile";
 
 function Router() {
   return (
     <Switch>
-      {/* Add pages below */}
       <Route path="/" component={Login} />
-      {/* Fallback to 404 */}
+      <Route path="/onboarding" component={Onboarding} />
+      <Route path="/home" component={Home} />
+      <Route path="/treino-hoje" component={TodayWorkout} />
+      <Route path="/plano" component={TrainingPlan} />
+      <Route path="/dia/:day" component={DayWorkout} />
+      <Route path="/evolucao" component={Evolution} />
+      <Route path="/ai" component={AICoach} />
+      <Route path="/perfil" component={Profile} />
       <Route component={NotFound} />
     </Switch>
   );
