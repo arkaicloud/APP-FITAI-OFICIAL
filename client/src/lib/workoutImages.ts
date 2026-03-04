@@ -17,31 +17,42 @@ const imageMap: Record<Gender, Record<WorkoutType, string[]>> = {
     ],
     cardio: [
       "/figmaAssets/workout/f-cardio-1.jpg",
+      "/figmaAssets/workout/f-cardio-2.jpg",
       "/figmaAssets/workout/f-condicionamento-1.jpg",
     ],
     condicionamento: [
       "/figmaAssets/workout/f-condicionamento-1.jpg",
+      "/figmaAssets/workout/f-condicionamento-2.jpg",
+      "/figmaAssets/workout/f-cardio-2.jpg",
       "/figmaAssets/workout/f-fullbody-1.jpg",
-      "/figmaAssets/workout/f-cardio-1.jpg",
     ],
     core: [
       "/figmaAssets/workout/f-core-1.jpg",
       "/figmaAssets/workout/f-core-2.jpg",
+      "/figmaAssets/workout/f-core-3.jpg",
     ],
     fullbody: [
       "/figmaAssets/workout/f-fullbody-1.jpg",
       "/figmaAssets/workout/f-fullbody-2.jpg",
-      "/figmaAssets/workout/f-condicionamento-1.jpg",
+      "/figmaAssets/workout/f-fullbody-3.jpg",
+      "/figmaAssets/workout/f-fullbody-4.jpg",
     ],
   },
   masculino: {
     superiores: [
       "/figmaAssets/workout/m-superiores-1.jpg",
-      "/figmaAssets/workout/m-condicionamento-1.jpg",
+      "/figmaAssets/workout/m-superiores-2.jpg",
+      "/figmaAssets/workout/m-superiores-3.jpg",
+      "/figmaAssets/workout/m-superiores-4.jpg",
+      "/figmaAssets/workout/m-superiores-5.jpg",
+      "/figmaAssets/workout/m-superiores-6.jpg",
+      "/figmaAssets/workout/m-superiores-7.jpg",
+      "/figmaAssets/workout/m-superiores-8.jpg",
     ],
     inferiores: [
-      "/figmaAssets/workout/m-superiores-1.jpg",
-      "/figmaAssets/workout/m-cardio-1.jpg",
+      "/figmaAssets/workout/m-inferiores-1.jpg",
+      "/figmaAssets/workout/m-inferiores-2.jpg",
+      "/figmaAssets/workout/m-inferiores-3.jpg",
     ],
     cardio: [
       "/figmaAssets/workout/m-cardio-1.jpg",
@@ -50,15 +61,18 @@ const imageMap: Record<Gender, Record<WorkoutType, string[]>> = {
     condicionamento: [
       "/figmaAssets/workout/m-condicionamento-1.jpg",
       "/figmaAssets/workout/m-cardio-1.jpg",
+      "/figmaAssets/workout/m-core-1.jpg",
     ],
     core: [
+      "/figmaAssets/workout/m-core-1.jpg",
       "/figmaAssets/workout/m-condicionamento-1.jpg",
-      "/figmaAssets/workout/m-superiores-1.jpg",
+      "/figmaAssets/workout/m-fullbody-1.jpg",
     ],
     fullbody: [
+      "/figmaAssets/workout/m-fullbody-1.jpg",
       "/figmaAssets/workout/m-superiores-1.jpg",
+      "/figmaAssets/workout/m-inferiores-2.jpg",
       "/figmaAssets/workout/m-cardio-1.jpg",
-      "/figmaAssets/workout/m-condicionamento-1.jpg",
     ],
   },
 };
