@@ -27,3 +27,21 @@ export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
 
 export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
 export type UserProfile = typeof userProfiles.$inferSelect;
+
+export const workoutLogs = pgTable("workout_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  workoutDate: varchar("workout_date").notNull(),
+  workoutName: varchar("workout_name").notNull(),
+  status: varchar("status").notNull().default("started"),
+  durationMinutes: integer("duration_minutes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertWorkoutLogSchema = createInsertSchema(workoutLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertWorkoutLog = z.infer<typeof insertWorkoutLogSchema>;
+export type WorkoutLog = typeof workoutLogs.$inferSelect;

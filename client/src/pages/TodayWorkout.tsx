@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { BottomNav } from "@/components/BottomNav";
 import { CoachAIChat } from "@/components/CoachAIChat";
 import { ChevronLeft, Clock, Dumbbell, HelpCircle, Calendar } from "lucide-react";
 import { getWorkoutImage } from "@/lib/workoutImages";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { UserProfile } from "@shared/schema";
 
 const exercises = [
@@ -23,11 +24,39 @@ export function TodayWorkout() {
   const { isAuthenticated } = useAuth();
   const [chatOpen, setChatOpen] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const startTimeRef = useRef<number>(Date.now());
+  const loggedStartRef = useRef(false);
 
   const { data: profile } = useQuery<UserProfile>({
     queryKey: ["/api/profile"],
     enabled: isAuthenticated,
   });
+
+  const logWorkout = useMutation({
+    mutationFn: (data: { workoutName: string; status: string; durationMinutes?: number }) =>
+      apiRequest("POST", "/api/workouts/log", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/workouts/history"] });
+    },
+  });
+
+  useEffect(() => {
+    if (isAuthenticated && !loggedStartRef.current) {
+      loggedStartRef.current = true;
+      startTimeRef.current = Date.now();
+      logWorkout.mutate({ workoutName, status: "started" });
+    }
+  }, [isAuthenticated]);
+
+  const handleComplete = () => {
+    const durationMinutes = Math.round((Date.now() - startTimeRef.current) / 60000);
+    setCompleted(true);
+    logWorkout.mutate({
+      workoutName,
+      status: "completed",
+      durationMinutes: durationMinutes > 0 ? durationMinutes : 1,
+    });
+  };
 
   const workoutBg = getWorkoutImage(workoutName, profile?.gender, 3);
 
@@ -62,7 +91,7 @@ export function TodayWorkout() {
                 </div>
                 <div className="flex items-center gap-1">
                   <Dumbbell className="w-3.5 h-3.5 text-gray-300" />
-                  <span className="text-gray-300 text-xs">4 exercícios</span>
+                  <span className="text-gray-300 text-xs">{exercises.length} exercícios</span>
                 </div>
               </div>
             </div>
@@ -87,7 +116,7 @@ export function TodayWorkout() {
                   <span className="bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-md font-medium">
                     {ex.reps} REPS
                   </span>
-                  <span className="bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-md font-medium flex items-center gap-0.5">
+                  <span className="bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-md font-medium">
                     {ex.rest}S
                   </span>
                 </div>
@@ -105,14 +134,15 @@ export function TodayWorkout() {
 
         <button
           data-testid="button-mark-complete"
-          onClick={() => setCompleted(!completed)}
-          className={`w-full mt-6 py-4 rounded-xl text-center font-medium text-sm border transition-colors ${
+          onClick={handleComplete}
+          disabled={completed}
+          className={`w-full mt-6 py-4 rounded-xl text-center font-medium text-sm border ${
             completed
               ? "bg-green-50 border-green-200 text-green-700"
               : "bg-white border-gray-200 text-gray-800"
           }`}
         >
-          {completed ? "✓ Treino concluído!" : "Marcar como concluído"}
+          {completed ? "Treino concluido!" : "Marcar como concluido"}
         </button>
       </div>
 
