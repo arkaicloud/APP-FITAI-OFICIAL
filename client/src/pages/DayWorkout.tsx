@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { useLocation, useParams } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
 import { BottomNav } from "@/components/BottomNav";
 import { CoachAIChat } from "@/components/CoachAIChat";
 import { ChevronLeft, Clock, Dumbbell, HelpCircle, Calendar } from "lucide-react";
-const loginBg = "/figmaAssets/login.png";
+import { getWorkoutImage } from "@/lib/workoutImages";
+import type { UserProfile } from "@shared/schema";
 
 const dayNames: Record<string, { label: string; tag: string; muscle: string }> = {
   segunda: { label: "Segunda", tag: "SEGUNDA", muscle: "Inferiores" },
@@ -22,9 +25,17 @@ const exercises = [
 
 export function DayWorkout() {
   const [, setLocation] = useLocation();
+  const { isAuthenticated } = useAuth();
   const params = useParams<{ day: string }>();
   const [chatOpen, setChatOpen] = useState(false);
   const day = dayNames[params.day || "segunda"] || dayNames.segunda;
+
+  const { data: profile } = useQuery<UserProfile>({
+    queryKey: ["/api/profile"],
+    enabled: isAuthenticated,
+  });
+
+  const workoutBg = getWorkoutImage(day.muscle, profile?.gender, 4);
 
   return (
     <div className="flex flex-col min-h-screen bg-white max-w-[430px] mx-auto" data-testid="day-workout-page">
@@ -40,7 +51,7 @@ export function DayWorkout() {
         <div className="rounded-2xl overflow-hidden bg-black relative h-[180px] mb-4">
           <div
             className="absolute inset-0 bg-cover bg-center opacity-50"
-            style={{ backgroundImage: `url(${loginBg})` }}
+            style={{ backgroundImage: `url(${workoutBg})` }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
           <div className="relative z-10 p-5 h-full flex flex-col justify-between">

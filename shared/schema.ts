@@ -13,6 +13,7 @@ export const userProfiles = pgTable("user_profiles", {
   bodyFat: varchar("body_fat"),
   age: integer("age"),
   goal: varchar("goal"),
+  gender: varchar("gender"),
   onboardingCompleted: boolean("onboarding_completed").default(false),
   trialStartDate: timestamp("trial_start_date").defaultNow(),
   isSubscribed: boolean("is_subscribed").default(false),

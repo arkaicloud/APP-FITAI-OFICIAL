@@ -10,7 +10,7 @@ interface Message {
   isUser: boolean;
 }
 
-type OnboardingStep = "welcome" | "goal" | "weight" | "height" | "age" | "bodyFat" | "done";
+type OnboardingStep = "welcome" | "goal" | "gender" | "weight" | "height" | "age" | "bodyFat" | "done";
 
 const goalOptions = [
   { label: "Hipertrofia & Forca", value: "hipertrofia" },
@@ -19,13 +19,18 @@ const goalOptions = [
   { label: "Saude Geral", value: "saude" },
 ];
 
+const genderOptions = [
+  { label: "Masculino", value: "masculino" },
+  { label: "Feminino", value: "feminino" },
+];
+
 export function Onboarding() {
   const [, setLocation] = useLocation();
   const { user, isLoading, isAuthenticated } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [step, setStep] = useState<OnboardingStep>("welcome");
   const [input, setInput] = useState("");
-  const [profileData, setProfileData] = useState({ goal: "", weight: 0, height: 0, age: 0, bodyFat: "" });
+  const [profileData, setProfileData] = useState({ goal: "", gender: "", weight: 0, height: 0, age: 0, bodyFat: "" });
   const [saving, setSaving] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const initRef = useRef(false);
@@ -74,6 +79,15 @@ export function Onboarding() {
   const handleGoalSelect = (goal: typeof goalOptions[0]) => {
     addUserMessage(goal.label);
     setProfileData((prev) => ({ ...prev, goal: goal.value }));
+    setTimeout(() => {
+      addBotMessage("Qual e o seu sexo biologico? Isso nos ajuda a personalizar as imagens e os treinos para voce.");
+      setStep("gender");
+    }, 500);
+  };
+
+  const handleGenderSelect = (gender: typeof genderOptions[0]) => {
+    addUserMessage(gender.label);
+    setProfileData((prev) => ({ ...prev, gender: gender.value }));
     setTimeout(() => {
       addBotMessage("Qual e o seu peso atual? (em kg)");
       setStep("weight");
@@ -196,6 +210,21 @@ export function Onboarding() {
                 className="px-4 py-3 bg-gray-100 rounded-2xl text-sm text-left text-gray-800 transition-colors"
               >
                 {goal.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {step === "gender" && (
+          <div className="flex flex-col gap-2 animate-fade-up">
+            {genderOptions.map((g) => (
+              <button
+                key={g.value}
+                data-testid={`button-gender-${g.value}`}
+                onClick={() => handleGenderSelect(g)}
+                className="px-4 py-3 bg-gray-100 rounded-2xl text-sm text-left text-gray-800 transition-colors"
+              >
+                {g.label}
               </button>
             ))}
           </div>

@@ -23,14 +23,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/profile", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { weight, height, bodyFat, age, goal } = req.body;
+      const { weight, height, bodyFat, age, goal, gender } = req.body;
 
       const [existing] = await db.select().from(userProfiles).where(eq(userProfiles.userId, userId));
 
       if (existing) {
         const [updated] = await db
           .update(userProfiles)
-          .set({ weight, height, bodyFat, age, goal, onboardingCompleted: true })
+          .set({ weight, height, bodyFat, age, goal, gender, onboardingCompleted: true })
           .where(eq(userProfiles.userId, userId))
           .returning();
         res.json(updated);
@@ -44,6 +44,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             bodyFat,
             age,
             goal,
+            gender,
             onboardingCompleted: true,
             trialStartDate: new Date(),
             isSubscribed: false,

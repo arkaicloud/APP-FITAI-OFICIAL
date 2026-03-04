@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
 import { BottomNav } from "@/components/BottomNav";
 import { CoachAIChat } from "@/components/CoachAIChat";
 import { Clock, Dumbbell, Flame, Calendar } from "lucide-react";
-
-const loginBg = "/figmaAssets/login.png";
+import { getWorkoutImage } from "@/lib/workoutImages";
+import type { UserProfile } from "@shared/schema";
 
 const weekDays = [
   { label: "S", done: true, intensity: "high" },
@@ -17,18 +18,27 @@ const weekDays = [
   { label: "D", done: false, intensity: "none" },
 ];
 
+const todayWorkout = { name: "Superiores", duration: "45min", exercises: 4, dayTag: "SEXTA" };
+
 export function Home() {
   const [, setLocation] = useLocation();
   const { user, isLoading, isAuthenticated } = useAuth();
   const [chatOpen, setChatOpen] = useState(false);
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      setLocation("/");
-    }
-  }, [isLoading, isAuthenticated, setLocation]);
+  const { data: profile } = useQuery<UserProfile>({
+    queryKey: ["/api/profile"],
+    enabled: isAuthenticated,
+  });
+
+  if (!isLoading && !isAuthenticated) {
+    setLocation("/");
+    return null;
+  }
 
   const firstName = user?.firstName || "Atleta";
+  const gender = profile?.gender;
+  const heroBg = getWorkoutImage(todayWorkout.name, gender, 0);
+  const cardBg = getWorkoutImage(todayWorkout.name, gender, 1);
 
   if (isLoading) {
     return (
@@ -43,7 +53,7 @@ export function Home() {
       <div className="relative h-[340px] w-full overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${loginBg})`, filter: "grayscale(100%) brightness(0.4)" }}
+          style={{ backgroundImage: `url(${heroBg})`, filter: "brightness(0.45)" }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60" />
         <div className="relative z-10 p-5 pt-12">
@@ -118,24 +128,24 @@ export function Home() {
         >
           <div
             className="absolute inset-0 bg-cover bg-center opacity-60"
-            style={{ backgroundImage: `url(${loginBg})` }}
+            style={{ backgroundImage: `url(${cardBg})` }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
           <div className="relative z-10 p-5 h-full flex flex-col justify-between">
             <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1.5 w-fit">
               <Calendar className="w-3.5 h-3.5 text-white" />
-              <span className="text-white text-xs font-medium">SEXTA</span>
+              <span className="text-white text-xs font-medium">{todayWorkout.dayTag}</span>
             </div>
             <div>
-              <h3 className="text-white text-2xl font-bold" data-testid="text-workout-name">Superiores</h3>
+              <h3 className="text-white text-2xl font-bold" data-testid="text-workout-name">{todayWorkout.name}</h3>
               <div className="flex items-center gap-3 mt-1.5">
                 <div className="flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5 text-gray-300" />
-                  <span className="text-gray-300 text-xs">45min</span>
+                  <span className="text-gray-300 text-xs">{todayWorkout.duration}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Dumbbell className="w-3.5 h-3.5 text-gray-300" />
-                  <span className="text-gray-300 text-xs">4 exercicios</span>
+                  <span className="text-gray-300 text-xs">{todayWorkout.exercises} exercicios</span>
                 </div>
               </div>
             </div>
