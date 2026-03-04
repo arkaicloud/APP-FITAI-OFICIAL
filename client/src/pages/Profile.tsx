@@ -1,16 +1,42 @@
+import { useEffect } from "react";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
 import { BottomNav } from "@/components/BottomNav";
 import { LogOut, Weight, Ruler, Percent, UserCircle } from "lucide-react";
-
-const stats = [
-  { label: "KG", value: "78.5", icon: Weight, color: "text-[#2b54ff]" },
-  { label: "CM", value: "178", icon: Ruler, color: "text-[#2b54ff]" },
-  { label: "GC", value: "12-15%", icon: Percent, color: "text-[#2b54ff]" },
-  { label: "ANOS", value: "26", icon: UserCircle, color: "text-[#2b54ff]" },
-];
+import type { UserProfile } from "@shared/schema";
 
 export function Profile() {
   const [, setLocation] = useLocation();
+  const { user, isLoading, isAuthenticated, logout } = useAuth();
+
+  const { data: profile } = useQuery<UserProfile>({
+    queryKey: ["/api/profile"],
+    enabled: isAuthenticated,
+  });
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      setLocation("/");
+    }
+  }, [isLoading, isAuthenticated, setLocation]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white">
+        <div className="animate-spin w-8 h-8 border-2 border-[#2b54ff] border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  const displayName = user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Usuario" : "Usuario";
+
+  const stats = [
+    { label: "KG", value: profile?.weight?.toString() || "--", icon: Weight, color: "text-[#2b54ff]" },
+    { label: "CM", value: profile?.height?.toString() || "--", icon: Ruler, color: "text-[#2b54ff]" },
+    { label: "GC", value: profile?.bodyFat || "--", icon: Percent, color: "text-[#2b54ff]" },
+    { label: "ANOS", value: profile?.age?.toString() || "--", icon: UserCircle, color: "text-[#2b54ff]" },
+  ];
 
   return (
     <div className="flex flex-col min-h-screen bg-white max-w-[430px] mx-auto" data-testid="profile-page">
@@ -21,11 +47,17 @@ export function Profile() {
       <div className="px-5 pb-24">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-            <UserCircle className="w-10 h-10 text-gray-400" />
+            {user?.profileImageUrl ? (
+              <img src={user.profileImageUrl} alt="Profile" className="w-full h-full object-cover" data-testid="img-profile" />
+            ) : (
+              <UserCircle className="w-10 h-10 text-gray-400" />
+            )}
           </div>
           <div>
-            <h2 className="font-semibold text-lg" data-testid="text-user-name">Paulo da Silva</h2>
-            <p className="text-sm text-gray-500" data-testid="text-user-plan">Plano Básico</p>
+            <h2 className="font-semibold text-lg" data-testid="text-user-name">{displayName}</h2>
+            <p className="text-sm text-gray-500" data-testid="text-user-plan">
+              {profile?.isSubscribed ? "Plano Premium" : "Plano Basico"}
+            </p>
           </div>
         </div>
 
@@ -45,7 +77,7 @@ export function Profile() {
 
         <button
           data-testid="button-logout"
-          onClick={() => setLocation("/")}
+          onClick={() => logout()}
           className="flex items-center justify-center gap-2 w-full py-3 text-red-500 font-medium text-sm rounded-xl transition-colors"
         >
           Sair da conta

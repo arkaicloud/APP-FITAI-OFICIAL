@@ -1,9 +1,41 @@
+import { useEffect } from "react";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import type { UserProfile } from "@shared/schema";
 
 export const Login = (): JSX.Element => {
   const [, setLocation] = useLocation();
+  const { user, isLoading, isAuthenticated } = useAuth();
+
+  const { data: profile, isLoading: profileLoading } = useQuery<UserProfile | null>({
+    queryKey: ["/api/profile"],
+    enabled: isAuthenticated,
+  });
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && !profileLoading) {
+      if (profile?.onboardingCompleted) {
+        setLocation("/home");
+      } else {
+        setLocation("/onboarding");
+      }
+    }
+  }, [isLoading, isAuthenticated, profileLoading, profile, setLocation]);
+
+  const handleGoogleLogin = () => {
+    window.location.href = "/api/login";
+  };
+
+  if (isLoading || (isAuthenticated && profileLoading)) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-black">
+        <div className="animate-spin w-8 h-8 border-2 border-white border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full max-w-[430px] mx-auto min-h-screen flex flex-col justify-between items-center bg-black" data-testid="login-page">
@@ -29,14 +61,14 @@ export const Login = (): JSX.Element => {
                   className="w-full font-semibold text-white text-[32px] text-center tracking-[0] leading-[33.6px]"
                   style={{ fontFamily: "'Inter Tight', Helvetica" }}
                 >
-                  O app que vai transformar a forma como você treina.
+                  O app que vai transformar a forma como voce treina.
                 </h1>
               </div>
 
               <Button
                 data-testid="button-login-google"
                 variant="secondary"
-                onClick={() => setLocation("/onboarding")}
+                onClick={handleGoogleLogin}
                 className="h-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-white rounded-[100px]"
               >
                 <img

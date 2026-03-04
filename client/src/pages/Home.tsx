@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 import { BottomNav } from "@/components/BottomNav";
 import { CoachAIChat } from "@/components/CoachAIChat";
 import { Clock, Dumbbell, Flame, Calendar } from "lucide-react";
+
 const loginBg = "/figmaAssets/login.png";
 
 const weekDays = [
@@ -17,7 +19,24 @@ const weekDays = [
 
 export function Home() {
   const [, setLocation] = useLocation();
+  const { user, isLoading, isAuthenticated } = useAuth();
   const [chatOpen, setChatOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      setLocation("/");
+    }
+  }, [isLoading, isAuthenticated, setLocation]);
+
+  const firstName = user?.firstName || "Atleta";
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white">
+        <div className="animate-spin w-8 h-8 border-2 border-[#2b54ff] border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-white max-w-[430px] mx-auto" data-testid="home-page">
@@ -32,7 +51,7 @@ export function Home() {
         </div>
         <div className="relative z-10 flex items-end justify-between gap-4 px-5 pb-6 mt-auto" style={{ marginTop: "120px" }}>
           <div>
-            <h1 className="text-white text-2xl font-bold" data-testid="text-greeting">Olá, Paulo</h1>
+            <h1 className="text-white text-2xl font-bold" data-testid="text-greeting">Ola, {firstName}</h1>
             <p className="text-gray-300 text-sm mt-1">Bora treinar hoje?</p>
           </div>
           <button
@@ -47,13 +66,13 @@ export function Home() {
 
       <div className="px-5 py-6 flex-1 pb-24">
         <div className="flex items-center justify-between gap-4 mb-3">
-          <h2 className="font-semibold text-base" data-testid="text-consistencia">Consistência</h2>
+          <h2 className="font-semibold text-base" data-testid="text-consistencia">Consistencia</h2>
           <button
             data-testid="link-ver-historico"
             onClick={() => setLocation("/evolucao")}
             className="text-[#2b54ff] text-sm font-medium"
           >
-            Ver histórico
+            Ver historico
           </button>
         </div>
 
@@ -116,7 +135,7 @@ export function Home() {
                 </div>
                 <div className="flex items-center gap-1">
                   <Dumbbell className="w-3.5 h-3.5 text-gray-300" />
-                  <span className="text-gray-300 text-xs">4 exercícios</span>
+                  <span className="text-gray-300 text-xs">4 exercicios</span>
                 </div>
               </div>
             </div>

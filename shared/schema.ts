@@ -1,18 +1,28 @@
+export * from "./models/auth";
+
+import { pgTable, varchar, integer, boolean, timestamp, real } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const users = pgTable("users", {
+export const userProfiles = pgTable("user_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  userId: varchar("user_id").notNull().unique(),
+  weight: real("weight"),
+  height: integer("height"),
+  bodyFat: varchar("body_fat"),
+  age: integer("age"),
+  goal: varchar("goal"),
+  onboardingCompleted: boolean("onboarding_completed").default(false),
+  trialStartDate: timestamp("trial_start_date").defaultNow(),
+  isSubscribed: boolean("is_subscribed").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
+  id: true,
+  createdAt: true,
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
+export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
+export type UserProfile = typeof userProfiles.$inferSelect;

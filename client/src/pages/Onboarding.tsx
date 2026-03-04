@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 import { ArrowUp, Sparkles } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 
 interface Message {
   id: number;
@@ -8,46 +10,147 @@ interface Message {
   isUser: boolean;
 }
 
-const onboardingMessages: Message[] = [
-  { id: 1, text: "Bem-vindo ao FIT.AI!", isUser: false },
-  {
-    id: 2,
-    text: "O app que vai transformar a forma como você treina. Aqui você monta seu plano de treino personalizado, acompanha sua evolução com estatísticas detalhadas e conta com uma IA disponível 24h para te guiar em cada exercício.",
-    isUser: false,
-  },
-  {
-    id: 3,
-    text: "Tudo pensado para você alcançar seus objetivos de forma inteligente e consistente.",
-    isUser: false,
-  },
-  { id: 4, text: "Vamos configurar seu perfil?", isUser: false },
+type OnboardingStep = "welcome" | "goal" | "weight" | "height" | "age" | "bodyFat" | "done";
+
+const goalOptions = [
+  { label: "Hipertrofia & Forca", value: "hipertrofia" },
+  { label: "Emagrecimento", value: "emagrecimento" },
+  { label: "Condicionamento", value: "condicionamento" },
+  { label: "Saude Geral", value: "saude" },
 ];
 
 export function Onboarding() {
   const [, setLocation] = useLocation();
-  const [visibleMessages, setVisibleMessages] = useState<Message[]>([]);
-  const [showStart, setShowStart] = useState(false);
+  const { user, isLoading, isAuthenticated } = useAuth();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [step, setStep] = useState<OnboardingStep>("welcome");
   const [input, setInput] = useState("");
+  const [profileData, setProfileData] = useState({ goal: "", weight: 0, height: 0, age: 0, bodyFat: "" });
+  const [saving, setSaving] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const initRef = useRef(false);
 
   useEffect(() => {
-    onboardingMessages.forEach((msg, i) => {
+    if (!isLoading && !isAuthenticated) {
+      window.location.href = "/api/login";
+    }
+  }, [isLoading, isAuthenticated]);
+
+  const firstName = user?.firstName || "Atleta";
+
+  const addBotMessage = (text: string) => {
+    setMessages((prev) => [...prev, { id: Date.now() + Math.random(), text, isUser: false }]);
+  };
+
+  const addUserMessage = (text: string) => {
+    setMessages((prev) => [...prev, { id: Date.now() + Math.random(), text, isUser: true }]);
+  };
+
+  useEffect(() => {
+    if (initRef.current || !isAuthenticated) return;
+    initRef.current = true;
+
+    const msgs: string[] = [
+      `Bem-vindo ao FIT.AI, ${firstName}!`,
+      "O app que vai transformar a forma como voce treina. Aqui voce monta seu plano de treino personalizado, acompanha sua evolucao com estatisticas detalhadas e conta com uma IA disponivel 24h para te guiar em cada exercicio.",
+      "Tudo pensado para voce alcancar seus objetivos de forma inteligente e consistente.",
+      "Vamos configurar seu perfil? Qual e o seu objetivo principal?",
+    ];
+
+    msgs.forEach((msg, i) => {
       setTimeout(() => {
-        setVisibleMessages((prev) => [...prev, msg]);
-        if (i === onboardingMessages.length - 1) {
-          setTimeout(() => setShowStart(true), 500);
+        addBotMessage(msg);
+        if (i === msgs.length - 1) {
+          setTimeout(() => setStep("goal"), 300);
         }
-      }, (i + 1) * 800);
+      }, (i + 1) * 700);
     });
-  }, []);
+  }, [firstName, isAuthenticated]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [visibleMessages, showStart]);
+  }, [messages, step]);
 
-  const handleStart = () => {
-    setLocation("/home");
+  const handleGoalSelect = (goal: typeof goalOptions[0]) => {
+    addUserMessage(goal.label);
+    setProfileData((prev) => ({ ...prev, goal: goal.value }));
+    setTimeout(() => {
+      addBotMessage("Qual e o seu peso atual? (em kg)");
+      setStep("weight");
+    }, 500);
   };
+
+  const handleSubmit = async () => {
+    if (!input.trim()) return;
+    const value = input.trim();
+    addUserMessage(value);
+    setInput("");
+
+    if (step === "weight") {
+      const w = parseFloat(value.replace(",", "."));
+      if (isNaN(w)) {
+        setTimeout(() => addBotMessage("Por favor, informe um numero valido para o peso."), 300);
+        return;
+      }
+      setProfileData((prev) => ({ ...prev, weight: w }));
+      setTimeout(() => {
+        addBotMessage("Qual e a sua altura? (em cm)");
+        setStep("height");
+      }, 500);
+    } else if (step === "height") {
+      const h = parseInt(value);
+      if (isNaN(h)) {
+        setTimeout(() => addBotMessage("Por favor, informe um numero valido para a altura."), 300);
+        return;
+      }
+      setProfileData((prev) => ({ ...prev, height: h }));
+      setTimeout(() => {
+        addBotMessage("Quantos anos voce tem?");
+        setStep("age");
+      }, 500);
+    } else if (step === "age") {
+      const a = parseInt(value);
+      if (isNaN(a)) {
+        setTimeout(() => addBotMessage("Por favor, informe um numero valido para a idade."), 300);
+        return;
+      }
+      setProfileData((prev) => ({ ...prev, age: a }));
+      setTimeout(() => {
+        addBotMessage("Qual e o seu percentual de gordura corporal estimado? (ex: 12-15%)");
+        setStep("bodyFat");
+      }, 500);
+    } else if (step === "bodyFat") {
+      const updatedProfile = { ...profileData, bodyFat: value };
+      setProfileData(updatedProfile);
+      setTimeout(() => {
+        addBotMessage("Perfeito! Seu perfil esta configurado. Vamos comecar!");
+        setStep("done");
+      }, 500);
+    }
+  };
+
+  const handleFinish = async () => {
+    setSaving(true);
+    try {
+      await apiRequest("POST", "/api/profile", profileData);
+      setLocation("/trial");
+    } catch (e: any) {
+      if (e.message?.includes("401")) {
+        window.location.href = "/api/login";
+        return;
+      }
+      addBotMessage("Houve um erro ao salvar seu perfil. Tente novamente.");
+    }
+    setSaving(false);
+  };
+
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white">
+        <div className="animate-spin w-8 h-8 border-2 border-[#2b54ff] border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen bg-white max-w-[430px] mx-auto" data-testid="onboarding-page">
@@ -65,7 +168,7 @@ export function Onboarding() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-3">
-        {visibleMessages.map((msg) => (
+        {messages.map((msg) => (
           <div
             key={msg.id}
             className={`flex ${msg.isUser ? "justify-end" : "justify-start"} animate-fade-up`}
@@ -83,38 +186,63 @@ export function Onboarding() {
           </div>
         ))}
 
-        {showStart && (
+        {step === "goal" && (
+          <div className="flex flex-col gap-2 animate-fade-up">
+            {goalOptions.map((goal) => (
+              <button
+                key={goal.value}
+                data-testid={`button-goal-${goal.value}`}
+                onClick={() => handleGoalSelect(goal)}
+                className="px-4 py-3 bg-gray-100 rounded-2xl text-sm text-left text-gray-800 transition-colors"
+              >
+                {goal.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {step === "done" && (
           <div className="flex justify-end animate-fade-up">
             <button
               data-testid="button-start"
-              onClick={handleStart}
-              className="px-6 py-3 bg-[#2b54ff] text-white rounded-full text-sm font-semibold transition-colors"
+              onClick={handleFinish}
+              disabled={saving}
+              className="px-6 py-3 bg-[#2b54ff] text-white rounded-full text-sm font-semibold transition-colors disabled:opacity-50"
             >
-              Começar!
+              {saving ? "Salvando..." : "Comecar!"}
             </button>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-4 border-t border-gray-100">
-        <div className="flex items-center gap-2">
-          <input
-            data-testid="input-onboarding-message"
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Digite sua mensagem"
-            className="flex-1 bg-gray-100 rounded-full px-4 py-3 text-sm outline-none"
-          />
-          <button
-            data-testid="button-send-onboarding"
-            className="w-10 h-10 rounded-full bg-[#2b54ff] flex items-center justify-center shrink-0"
-          >
-            <ArrowUp className="w-5 h-5 text-white" />
-          </button>
+      {(step === "weight" || step === "height" || step === "age" || step === "bodyFat") && (
+        <div className="p-4 border-t border-gray-100">
+          <div className="flex items-center gap-2">
+            <input
+              data-testid="input-onboarding-value"
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+              placeholder={
+                step === "weight" ? "Ex: 78.5" :
+                step === "height" ? "Ex: 178" :
+                step === "age" ? "Ex: 26" :
+                "Ex: 12-15%"
+              }
+              className="flex-1 bg-gray-100 rounded-full px-4 py-3 text-sm outline-none"
+            />
+            <button
+              data-testid="button-send-onboarding"
+              onClick={handleSubmit}
+              className="w-10 h-10 rounded-full bg-[#2b54ff] flex items-center justify-center shrink-0"
+            >
+              <ArrowUp className="w-5 h-5 text-white" />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
