@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { BottomNav } from "@/components/BottomNav";
 import { CoachAIChat } from "@/components/CoachAIChat";
 import { ChevronLeft, Clock, Dumbbell, HelpCircle, Calendar } from "lucide-react";
-import { getWorkoutImage } from "@/lib/workoutImages";
+import { getWorkoutImage, saveGenderToCache } from "@/lib/workoutImages";
 import type { UserProfile } from "@shared/schema";
 
 const WEEKDAY_PT: Record<string, string> = {
@@ -37,6 +37,7 @@ export function DayWorkout() {
     enabled: isAuthenticated && !!params.day,
   });
 
+  if (profile?.gender) saveGenderToCache(profile.gender);
   const workoutBg = getWorkoutImage(day?.name || "Superiores", profile?.gender, 4);
   const durationMin = day?.estimatedDurationInSeconds ? Math.round(day.estimatedDurationInSeconds / 60) : 45;
 

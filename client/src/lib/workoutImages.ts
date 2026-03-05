@@ -88,16 +88,32 @@ function workoutNameToType(name: string): WorkoutType {
   return "superiores";
 }
 
-export function getWorkoutImage(workoutName: string, gender: string | null | undefined, seed?: number): string {
-  const g: Gender = gender === "masculino" ? "masculino" : "feminino";
+export function getDailySeed(offset: number = 0): number {
+  const today = new Date();
+  const dayNumber = Math.floor(today.getTime() / (1000 * 60 * 60 * 24));
+  return dayNumber + offset;
+}
+
+export function saveGenderToCache(gender: string) {
+  try { localStorage.setItem("fit_ai_gender", gender); } catch {}
+}
+
+export function getCachedGender(): string | null {
+  try { return localStorage.getItem("fit_ai_gender"); } catch { return null; }
+}
+
+export function getWorkoutImage(workoutName: string, gender: string | null | undefined, offset: number = 0): string {
+  const resolvedGender = gender ?? getCachedGender();
+  const g: Gender = resolvedGender === "masculino" ? "masculino" : "feminino";
   const type = workoutNameToType(workoutName);
   const images = imageMap[g][type];
-  const index = seed !== undefined ? Math.abs(seed) % images.length : 0;
+  const index = Math.abs(getDailySeed(offset)) % images.length;
   return images[index];
 }
 
 export function getWorkoutImages(workoutName: string, gender: string | null | undefined): string[] {
-  const g: Gender = gender === "masculino" ? "masculino" : "feminino";
+  const resolvedGender = gender ?? getCachedGender();
+  const g: Gender = resolvedGender === "masculino" ? "masculino" : "feminino";
   const type = workoutNameToType(workoutName);
   return imageMap[g][type];
 }

@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { BottomNav } from "@/components/BottomNav";
 import { CoachAIChat } from "@/components/CoachAIChat";
 import { Clock, Dumbbell, Zap, Calendar, Plus } from "lucide-react";
-import { getWorkoutImage } from "@/lib/workoutImages";
+import { getWorkoutImage, saveGenderToCache } from "@/lib/workoutImages";
 import type { UserProfile } from "@shared/schema";
 import { useState } from "react";
 
@@ -28,6 +28,7 @@ export function TrainingPlan() {
   const { data: plans = [], isLoading } = useQuery<WorkoutPlanFull[]>({ queryKey: ["/api/workout-plans"], enabled: isAuthenticated });
 
   const gender = profile?.gender;
+  if (gender) saveGenderToCache(gender);
   const activePlan = plans.find(p => p.isActive) || plans[0];
 
   const sortedDays = activePlan

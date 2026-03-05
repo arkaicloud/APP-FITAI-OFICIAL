@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { BottomNav } from "@/components/BottomNav";
 import { CoachAIChat } from "@/components/CoachAIChat";
 import { Clock, Dumbbell, Flame, Calendar, Moon } from "lucide-react";
-import { getWorkoutImage } from "@/lib/workoutImages";
+import { getWorkoutImage, saveGenderToCache } from "@/lib/workoutImages";
 import type { UserProfile, WorkoutLog } from "@shared/schema";
 
 const WEEKDAY_LABELS: Record<string, string> = {
@@ -64,6 +64,7 @@ export function Home() {
 
   const firstName = user?.firstName || "Atleta";
   const gender = profile?.gender;
+  if (gender) saveGenderToCache(gender);
 
   const workoutName = todayData?.day?.name || "Superiores";
   const heroBg = getWorkoutImage(workoutName, gender, 0);

@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { BottomNav } from "@/components/BottomNav";
 import { CoachAIChat } from "@/components/CoachAIChat";
 import { ChevronLeft, Clock, Dumbbell, HelpCircle, Calendar, Moon } from "lucide-react";
-import { getWorkoutImage } from "@/lib/workoutImages";
+import { getWorkoutImage, saveGenderToCache } from "@/lib/workoutImages";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { UserProfile } from "@shared/schema";
 
@@ -88,6 +88,7 @@ export function TodayWorkout() {
   };
 
   const workoutName = todayData?.day?.name || "Superiores";
+  if (profile?.gender) saveGenderToCache(profile.gender);
   const workoutBg = getWorkoutImage(workoutName, profile?.gender, 3);
   const durationMin = todayData?.day?.estimatedDurationInSeconds ? Math.round(todayData.day.estimatedDurationInSeconds / 60) : 45;
 
