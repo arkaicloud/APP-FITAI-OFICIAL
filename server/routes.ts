@@ -234,7 +234,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
 
-      const openai = new OpenAI({ baseURL: process.env.OPENAI_API_BASE_URL, apiKey: process.env.OPENAI_API_KEY });
+      const openai = new OpenAI({
+        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+      });
 
       const activePlan = await db.select().from(workoutPlans).where(and(eq(workoutPlans.userId, userId), eq(workoutPlans.isActive, true)));
       const existingPlans = await db.select().from(workoutPlans).where(eq(workoutPlans.userId, userId));

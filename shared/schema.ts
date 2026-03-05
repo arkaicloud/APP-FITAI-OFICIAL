@@ -1,4 +1,5 @@
 export * from "./models/auth";
+export * from "./models/chat";
 
 import { pgTable, varchar, integer, boolean, timestamp, real } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
